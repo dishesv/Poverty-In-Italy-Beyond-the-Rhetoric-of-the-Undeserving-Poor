@@ -1,0 +1,3 @@
+PovertysummaryISTAT.xls --> Dati estratti il 08 Jun 2023 13:35 UTC (GMT) da I.Stat	
+Soglie di povertà --> https://www.istat.it/it/files/2022/06/Report_Povert%C3%A0_2021_14-06.pdf lì erano in pdf
+povertareliativasoglie.csv --> 30/07/2023 15:33 UTC (GMT) da I.Stat

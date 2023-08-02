@@ -1,0 +1,3 @@
+Data download 18/05/23
+1 = RdC-PdC per Comune. Numero Nuclei richiedenti per comune ISTAT incluso soglia di povertà, popolazione residente dal 1 Gennaio 2020
+2 = Reddito/Pensione di cittadinanza Anno 2019

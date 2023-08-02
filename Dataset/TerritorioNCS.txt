@@ -1,0 +1,33 @@
+Territorio						
+
+Nord-ovest
+ Piemonte
+ Valle d'Aosta / Vallée d'Aoste
+ Liguria
+ Lombardia
+Nord-est
+ Provincia Autonoma Bolzano / Bozen
+ Provincia Autonoma Trento
+ Veneto
+ Friuli-Venezia Giulia
+ Emilia-Romagna
+
+
+Centro
+ Toscana
+ Umbria
+ Marche
+ Lazio
+
+
+Sud
+ Abruzzo
+ Molise
+ Campania
+ Puglia
+ Basilicata
+ Calabria
+Isole
+ Sicilia
+ Sardegna
+ 

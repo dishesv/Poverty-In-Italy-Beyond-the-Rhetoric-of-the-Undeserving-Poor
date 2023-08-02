@@ -1,0 +1,12 @@
+﻿"TIPO_DATO8","Tipo dato","LINEE_POVERTA","Linee di povertà","NUMEROSITA","Numero componenti della famiglia","TIME","Seleziona periodo","Value","Flag Codes","Flags"
+"SOGLIA_POVREL","soglia di povertà relativa (spesa mensile in euro)","ALL","tutte le voci","N1","1","2021","2021",629.29,,
+"SOGLIA_POVREL","soglia di povertà relativa (spesa mensile in euro)","ALL","tutte le voci","N2","2","2021","2021",1048.81,,
+"SOGLIA_POVREL","soglia di povertà relativa (spesa mensile in euro)","ALL","tutte le voci","N3","3","2021","2021",1394.92,,
+"SOGLIA_POVREL","soglia di povertà relativa (spesa mensile in euro)","ALL","tutte le voci","N4","4","2021","2021",1709.56,,
+"SOGLIA_POVREL","soglia di povertà relativa (spesa mensile in euro)","ALL","tutte le voci","N5","5","2021","2021",1992.74,,
+"SOGLIA_POVREL","soglia di povertà relativa (spesa mensile in euro)","ALL","tutte le voci","N6","6","2021","2021",2265.43,,
+"SOGLIA_POVREL","soglia di povertà relativa (spesa mensile in euro)","ALL","tutte le voci","N7_GE","7 e più","2021","2021",2517.14,,
+"FAM_VAL_PERC_POV","famiglie per fascia di povertà (composizione %)","DEFPR","sicuramente non povere (spesa maggiore del 120% della linea di povertà)","TOT","totale","2021","2021",81.3,,
+"FAM_VAL_PERC_POV","famiglie per fascia di povertà (composizione %)","ALMPR_SPL_120","quasi povere (spesa compresa fra la line di povertà e il 120% della stessa)","TOT","totale","2021","2021",7.6,,
+"FAM_VAL_PERC_POV","famiglie per fascia di povertà (composizione %)","SCRPR_B80_SPL","appena povere (spesa fra l'80% della line di povertà e la linea di povertà)","TOT","totale","2021","2021",6,,
+"FAM_VAL_PERC_POV","famiglie per fascia di povertà (composizione %)","SCRPR_U80_SPL","sicuramente povere (spesa fino all'80% della linea di povertà)","TOT","totale","2021","2021",5.2,,
