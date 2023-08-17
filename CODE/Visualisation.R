@@ -140,7 +140,7 @@ crt = ggplot()+
   coord_polar()
 crt  
   
-crt+ annotate(
+crt<-crt+ annotate(
   x = 0.25, 
   y = 5, 
   label = "   5", 
@@ -211,18 +211,11 @@ crt+ annotate(
     size = 2,
     check_overlap = TRUE
   )+
-  #labs(
-   # title = "\nAbsolute Poverty Incidence by Family Type and Area - 2021",
-    #subtitle = paste(
-     # "\nFor the three macroareas in Italy, some family types and the associated incidence of absolute poverty is shown.",
-      #"Dots represent the national average for the group while diamonds represent the national average in 2017.",
-      #sep = "\n"
-    #))+
-    #caption = "\n\nData Visualisation by Vittoria Piatti") 
+  labs(
+   title = "\nAbsolute Poverty Incidence by Family Type and Area - 2021")+
   theme(
-    #text = element_text(color = "gray12", family = "Times New Roman"),
-    panel.spacing.x=unit(0.5, "cm"),
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     axis.ticks.y = element_blank(),
     axis.text.y = element_blank())
+crt
