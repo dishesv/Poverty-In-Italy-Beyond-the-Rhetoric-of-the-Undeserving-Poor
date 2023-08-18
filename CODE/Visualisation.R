@@ -6,6 +6,33 @@ povabslines21 <- read_delim("Dataset/Povertà/povabslines21.csv", delim = ";", es
 
 sogliepovrel16_21 <- read_csv("Dataset/Povertà/sogliepovrel16_21.csv", 
                               col_types = cols(`Numero componenti della famiglia` = col_number()))
+pop2021 <- read_csv("Dataset/Povertà/population2021.csv", 
+                           col_types = cols(TIPO_DATO15 = col_skip(), 
+                                            SEXISTAT1 = col_skip(), `Seleziona periodo` = col_skip()))
+pop2021<- pop2021%>%filter(is.na(Flags)==TRUE & `Tipo di indicatore demografico`!="popolazione inizio periodo")%>%select(-c("Flags","Flag Codes"))%>%filter(TIME=="2021")
+trentino <- pop2021%>%
+  filter(Territorio %in% c("Provincia Autonoma Bolzano / Bozen","Provincia Autonoma Trento"))%>%
+  group_by(`Tipo di indicatore demografico`,Sesso)%>%
+  summarise(ITTER107="TAT",
+            Territorio="Trentino Alto Adige",
+            TIME="2021",
+            Value=sum(Value))
+nord <- pop2021%>%
+  filter(Territorio %in% c("Nord-ovest","Nord-est"))%>%
+  group_by(`Tipo di indicatore demografico`,Sesso)%>%
+  summarise(ITTER107="N",
+            Territorio="Nord",
+            TIME="2021",
+            Value=sum(Value))
+mezzogiorno <- pop2021%>%
+  filter(Territorio %in% c("Sud","Isole"))%>%
+  group_by(`Tipo di indicatore demografico`,Sesso)%>%
+  summarise(ITTER107="S",
+            Territorio="Mezzogiorno",
+            TIME="2021",
+            Value=sum(Value))
+pop2021<-rbind(pop2021,trentino,nord,mezzogiorno)%>%filter(!(Territorio %in% c("Provincia Autonoma Bolzano / Bozen","Provincia Autonoma Trento","Nord-ovest","Nord-est","Sud", "Isole")) )
+
 povbyhouseholdtype16_21 <- read_csv("Dataset/Povertà/povbyhouseholdtype16_21.csv")
 povbyhouseholdtype16_21 <- povbyhouseholdtype16_21%>% mutate_if(is.character, as.factor)
 
@@ -91,7 +118,7 @@ gtot = ggplot(data=(povbyhouseholdtype16_21%>% filter(TIP_FAM=='HH'& ITTER107=='
 gtot
 
 gfamnationality = ggplot(data=(povbyhouseholdtype16_21%>% filter((TIP_FAM=='WH_FR_HH'|TIP_FAM=='NAT_FR_HH'|TIP_FAM=='ALL_NNAT')& ITTER107=='IT')), 
-  aes(x=TIME, y=Value, group=TIP_FAM, color =TIP_FAM))+
+  aes(x=order(TIME,), y=Value, group=TIP_FAM, color =TIP_FAM))+
   geom_line()+
   geom_text(
     vjust = 0, nudge_y = 0.15,
@@ -219,3 +246,21 @@ crt<-crt+ annotate(
     axis.ticks.y = element_blank(),
     axis.text.y = element_blank())
 crt
+
+######Context: population 2021#####
+popplot = ggplot()+
+  geom_col(data=pop2021%>%filter(`Tipo di indicatore demografico`=="numero di famiglie al 31 dicembre"&Territorio %in% c("Nord","Centro","Mezzogiorno")) ,
+           aes(x=reorder(Territorio,Value),y=Value))+
+  geom_col(data=pop2021%>%filter(`Tipo di indicatore demografico`=="popolazione al 31 dicembre"&Sesso=="totale"&Territorio %in% c("Italia","Nord","Centro","Mezzogiorno")) ,
+           aes(x=reorder(Territorio,Value),y=Value ))+
+  scale_y_continuous(
+    name="Number of households",
+    sec.axis = sec_axis(,name="Population")
+  )
+  coord_flip()
+popplot
+
+popshare_area = ggplot(data=pop2021%>%filter(Territorio %in% c("Nord","Centro","Mezzogiorno")))+
+  geom_col(aes(x=`Tipo di indicatore demografico`,y=Value,fill=as.factor(Territorio,levels=c("Nord", "Centro", "Mezzogiorno")),position="fill"))+
+  geom_text(ggstats::stat = "prop",position = position_fill(.5))
+popshare_area
