@@ -5,6 +5,7 @@ install.packages("tidyr")
 install.packages("GGally")
 install.packages("stringr")
 install.packages("ggstats")
+install.packages("MASS")
 
 library(readr)
 library(ggplot2)
@@ -14,5 +15,5 @@ library(cowplot)
 library(GGally)
 library(stringr)
 library(ggstats)
-
+library(MASS)
 

@@ -5,7 +5,11 @@ setwd("~/UNI/THESIS/Poverty-In-Italy-Beyond-the-Rhetoric-of-the-Undeserving-Poor
 povabslines21 <- read_delim("Dataset/Povertà/povabslines21.csv", delim = ";", escape_double = FALSE, trim_ws = TRUE)
 
 sogliepovrel16_21 <- read_csv("Dataset/Povertà/sogliepovrel16_21.csv", 
-                              col_types = cols(`Numero componenti della famiglia` = col_number()))
+                              col_types = cols(NUMEROSITA = col_skip(), 
+                                               `Numero componenti della famiglia` = col_integer(), 
+                                               `Seleziona periodo` = col_skip(), 
+                                               `Flag Codes` = col_skip(), Flags = col_skip()))
+povrellines21<-sogliepovrel16_21%>%filter(TIME=="2021")
 pop2021 <- read_csv("Dataset/Povertà/population2021.csv", 
                            col_types = cols(TIPO_DATO15 = col_skip(), 
                                             SEXISTAT1 = col_skip(), `Seleziona periodo` = col_skip()))
@@ -248,19 +252,37 @@ crt<-crt+ annotate(
 crt
 
 ######Context: population 2021#####
-popplot = ggplot()+
-  geom_col(data=pop2021%>%filter(`Tipo di indicatore demografico`=="numero di famiglie al 31 dicembre"&Territorio %in% c("Nord","Centro","Mezzogiorno")) ,
-           aes(x=reorder(Territorio,Value),y=Value))+
-  geom_col(data=pop2021%>%filter(`Tipo di indicatore demografico`=="popolazione al 31 dicembre"&Sesso=="totale"&Territorio %in% c("Italia","Nord","Centro","Mezzogiorno")) ,
-           aes(x=reorder(Territorio,Value),y=Value ))+
-  scale_y_continuous(
-    name="Number of households",
-    sec.axis = sec_axis(,name="Population")
-  )
-  coord_flip()
-popplot
-
 popshare_area = ggplot(data=pop2021%>%filter(Territorio %in% c("Nord","Centro","Mezzogiorno")))+
   geom_col(aes(x=`Tipo di indicatore demografico`,y=Value,fill=as.factor(Territorio,levels=c("Nord", "Centro", "Mezzogiorno")),position="fill"))+
   geom_text(ggstats::stat = "prop",position = position_fill(.5))
 popshare_area
+
+######Poverty Lines######
+hs=c("1componente18-59",                  
+     "1comp.60-74",                       
+     "1comp.75+" ,                        
+      "1comp.11-17_1comp.18-59" ,          
+      "1comp.4-10_1comp.18-59",            
+      "1comp.11-17_2comp.18-59",           
+      "1comp.4-10_2comp.18-59",            
+      "1comp.0-3_2comp.18-59" ,            
+      "1comp.4-10_1comp.11-17_2comp.18-59",
+      "1comp.0-3_1comp.4-10_2comp.18-59"  ,           
+      "1comp.4-10_2comp.11-17_2comp.18-59",
+      "2comp.11-17_3comp.18-59"           )
+
+povlines21<-povrellines21%>%filter(LINEE_POVERTA=='ALL' & is.na(`Numero componenti della famiglia`)=='FALSE' )%>%select(c("Numero componenti della famiglia","Value"))
+povlines21<-cbind(povlines21,povlines21$Value,povlines21$Value,povlines21$Value,povlines21$Value,povlines21$Value,povlines21$Value,povlines21$Value,povlines21$Value)
+colnames(povlines21)<-colnames(povabslines21[1:10])
+povlines21<-rbind(povlines21,
+                  povabslines21%>%filter(household_size %in% hs)%>%select(-c("familysize","minor_bin")))
+
+gpovlines<-GGally::ggparcoord(povlines21,
+           columns = 2:10,
+           showPoints = TRUE, 
+           groupColumn = 1,
+           title = "Absolute and relative poverty lines",
+           alphaLines = 0.3,
+           scale="globalminmax"
+) 
+
