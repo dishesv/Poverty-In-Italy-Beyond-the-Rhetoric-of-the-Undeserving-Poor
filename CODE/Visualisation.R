@@ -84,6 +84,17 @@ pbht_rel<-povbyhouseholdtype16_21%>%
   select(c(TIME, `Tipologia familiare`,ITTER107,Value))%>% 
   filter(`Tipologia familiare` %in% households)
   
+rdcpdc <- read_delim("Dataset/RDC/rdc_pdc_19_23.csv", 
+                        delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", 
+                                                                            grouping_mark = "."), trim_ws = TRUE)
+rdc_19_23<-rdcpdc[,c(1:5)]
+
+Romanos <- data.frame(views = c("None of these","Functionalistic","Social","Culturalistic","Fatalistic"),
+                      "2007" = c(10,15,26,28,21),
+                      "2009" = c(6,16,35,29,14),
+                      "2010" = c(5,20,35,26,14))
+Romanos <- Romanos %>% pivot_longer(cols=c(X2007, X2009, X2010))
+
 
 
 #####VIZ####
@@ -286,3 +297,23 @@ gpovlines<-GGally::ggparcoord(povlines21,
            scale="globalminmax"
 ) 
 
+
+######RdC/PdC recipients#####
+grdcpdc <- rdc_19_23 %>% filter(Area!="Italia")%>%
+  ggplot(aes(x=TIME, y=nuclei, fill=factor(Area,levels=c("Nord", "Centro","Sud e Isole"))))+
+  geom_col()+
+  geom_text(aes(label=avg),
+             position=position_stack(
+               0.5
+             ),
+            check_overlap = T)
+  #scale_y_discrete(breaks=waiver(),n.breaks = 10)
+grdcpdc
+rdcpdcshare <- rdcpdc%>%
+  ggplot(aes(x=TIME,y=))
+
+######Romano's analysis######
+gromanos <- Romanos %>%
+  ggplot(aes(x=name,y=value, fill=reorder(views,value)))+
+  geom_col()
+gromanos
