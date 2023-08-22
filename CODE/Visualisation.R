@@ -309,8 +309,6 @@ grdcpdc <- rdc_19_23 %>% filter(Area!="Italia")%>%
             check_overlap = T)
   #scale_y_discrete(breaks=waiver(),n.breaks = 10)
 grdcpdc
-rdcpdcshare <- rdcpdc%>%
-  ggplot(aes(x=TIME,y=))
 
 ######Romano's analysis######
 gromanos <- Romanos %>%
