@@ -9,33 +9,38 @@ sogliepovrel16_21 <- read_csv("Dataset/Povertà/sogliepovrel16_21.csv",
                                                `Numero componenti della famiglia` = col_integer(), 
                                                `Seleziona periodo` = col_skip(), 
                                                `Flag Codes` = col_skip(), Flags = col_skip()))
+
 povrellines21<-sogliepovrel16_21%>%filter(TIME=="2021")
+
 pop2021 <- read_csv("Dataset/Povertà/population2021.csv", 
                            col_types = cols(TIPO_DATO15 = col_skip(), 
-                                            SEXISTAT1 = col_skip(), `Seleziona periodo` = col_skip()))
-pop2021<- pop2021%>%filter(is.na(Flags)==TRUE & `Tipo di indicatore demografico`!="popolazione inizio periodo")%>%select(-c("Flags","Flag Codes"))%>%filter(TIME=="2021")
-trentino <- pop2021%>%
-  filter(Territorio %in% c("Provincia Autonoma Bolzano / Bozen","Provincia Autonoma Trento"))%>%
-  group_by(`Tipo di indicatore demografico`,Sesso)%>%
-  summarise(ITTER107="TAT",
-            Territorio="Trentino Alto Adige",
-            TIME="2021",
-            Value=sum(Value))
-nord <- pop2021%>%
-  filter(Territorio %in% c("Nord-ovest","Nord-est"))%>%
-  group_by(`Tipo di indicatore demografico`,Sesso)%>%
-  summarise(ITTER107="N",
-            Territorio="Nord",
-            TIME="2021",
-            Value=sum(Value))
-mezzogiorno <- pop2021%>%
-  filter(Territorio %in% c("Sud","Isole"))%>%
-  group_by(`Tipo di indicatore demografico`,Sesso)%>%
-  summarise(ITTER107="S",
-            Territorio="Mezzogiorno",
-            TIME="2021",
-            Value=sum(Value))
-pop2021<-rbind(pop2021,trentino,nord,mezzogiorno)%>%filter(!(Territorio %in% c("Provincia Autonoma Bolzano / Bozen","Provincia Autonoma Trento","Nord-ovest","Nord-est","Sud", "Isole")) )
+                                            SEXISTAT1 = col_skip(), 
+                                            `Seleziona periodo` = col_skip(),
+                                            TIME = col_integer()))
+pop2021<- pop2021%>%
+  filter( `Tipo di indicatore demografico`!="popolazione inizio periodo")%>%
+  select(-c("Flags","Flag Codes"))%>%
+  filter(TIME==2021)
+
+p21<- pop2021%>%
+  filter(Sesso=='totale')%>%
+  select(-(Sesso))%>%
+  pivot_wider(names_from = `Tipo di indicatore demografico`, values_from = Value)
+  
+rednetbyregion <- read_csv("Dataset/Povertà/redditonettobyregion.csv", 
+                                 col_types = cols(T_D8 = col_factor(levels = c("REDD_MEDIO_FAM", 
+                                                                               "REDD_MEDIANO_FAM")), `Presenza affitti imputati` = col_skip(), 
+                                                  RDPR = col_skip(), `Fonte principale di reddito familiare` = col_skip(), 
+                                                  `Seleziona periodo` = col_skip(), 
+                                                  `Flag Codes` = col_skip(), Flags = col_skip()))
+
+rnet21<-rednetbyregion%>%
+  filter(TIME=="2021" & !(Territorio%in%c('Sud','Centro')) )%>%
+  select(-c(PRAF,`Tipo dato`))%>%
+  pivot_wider(names_from = T_D8, values_from = Value)
+
+popbyred <- rnet21%>%
+  inner_join(p21)
 
 povbyhouseholdtype16_21 <- read_csv("Dataset/Povertà/povbyhouseholdtype16_21.csv")
 povbyhouseholdtype16_21 <- povbyhouseholdtype16_21%>% mutate_if(is.character, as.factor)
@@ -46,9 +51,11 @@ households <- c('totale famiglie',
                 'almeno un anziano',
                 'monogenitore', 
                 '1 figlio minore','almeno un figlio minore')
+
 eng_households <-c("1 person household 65+","Household with elderly", "Italians-only household",
                    "1 person household 35-64", "All households", "Household with 1 minor",
                    "Single- parent", "Household with minors", "Foreigners-only household")
+
 pbht_ass<-povbyhouseholdtype16_21%>%
   filter(TIPO_DATO8=='INCID_POVASS_FAM')%>%
   select(c(TIME, `Tipologia familiare`,ITTER107,Value))%>% 
@@ -63,7 +70,6 @@ pbhtasschart <- povbyhouseholdtype16_21%>%
   mutate(ITTER107 = replace(ITTER107, ITTER107 == "ITE", 'Centre'))%>%
   mutate(ITTER107 = replace(ITTER107, ITTER107 == "ITFG", 'South and Islands'))
 
-
 pbht_ass<- pbht_ass%>% 
   mutate(ITTER107 = as.character(ITTER107))%>%
   mutate(ITTER107 = replace(ITTER107, ITTER107 == "ITCD", 'N'))%>%
@@ -75,9 +81,6 @@ pbht_ass<- pbht_ass%>%
 )
 pbht_ass1721 <- pbht_ass%>% filter(TIME %in% c('2021','2017'))%>%
   mutate(ITTER107 = as.factor(ITTER107))
-  
-  
-
 
 pbht_rel<-povbyhouseholdtype16_21%>%
   filter(TIPO_DATO8=='INCID_POVREL_FAM')%>%
@@ -262,12 +265,6 @@ crt<-crt+ annotate(
     axis.text.y = element_blank())
 crt
 
-######Context: population 2021#####
-popshare_area = ggplot(data=pop2021%>%filter(Territorio %in% c("Nord","Centro","Mezzogiorno")))+
-  geom_col(aes(x=`Tipo di indicatore demografico`,y=Value,fill=as.factor(Territorio,levels=c("Nord", "Centro", "Mezzogiorno")),position="fill"))+
-  geom_text(ggstats::stat = "prop",position = position_fill(.5))
-popshare_area
-
 ######Poverty Lines######
 hs=c("1componente18-59",                  
      "1comp.60-74",                       
@@ -315,3 +312,15 @@ gromanos <- Romanos %>%
   ggplot(aes(x=name,y=value, fill=reorder(views,value)))+
   geom_col()
 gromanos
+
+######Population and Income#####
+gpopinc <- popbyred%>% 
+  ggplot() +
+  geom_segment( aes(x=REDD_MEDIANO_FAM, xend=REDD_MEDIO_FAM, y=reorder(Territorio,`numero di famiglie al 31 dicembre`), yend=reorder(Territorio,`numero di famiglie al 31 dicembre`)), color="grey") +
+  geom_point( aes(x=REDD_MEDIANO_FAM, y=reorder(Territorio,`numero di famiglie al 31 dicembre`)), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x=REDD_MEDIO_FAM, y=reorder(Territorio,`numero di famiglie al 31 dicembre`)), color=rgb(0.7,0.2,0.1,0.5), size=3 ) 
+gpopinc
+popoverview <-popbyred%>%filter(Territorio!="Italia")%>%
+  ggplot()+
+  geom_point(aes(x=`numero di famiglie al 31 dicembre`,y=reorder(Territorio,`numero di famiglie al 31 dicembre`)))
+popoverview
