@@ -316,10 +316,13 @@ gromanos
 ######Population and Income#####
 gpopinc <- popbyred%>% 
   ggplot() +
-  geom_segment( aes(x=REDD_MEDIANO_FAM, xend=REDD_MEDIO_FAM, y=reorder(Territorio,`numero di famiglie al 31 dicembre`), yend=reorder(Territorio,`numero di famiglie al 31 dicembre`)), color="grey") +
-  geom_point( aes(x=REDD_MEDIANO_FAM, y=reorder(Territorio,`numero di famiglie al 31 dicembre`)), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
-  geom_point( aes(x=REDD_MEDIO_FAM, y=reorder(Territorio,`numero di famiglie al 31 dicembre`)), color=rgb(0.7,0.2,0.1,0.5), size=3 ) 
+  geom_segment(aes(x=REDD_MEDIANO_FAM, xend=REDD_MEDIO_FAM, y=reorder(Territorio,REDD_MEDIANO_FAM), yend=reorder(Territorio,REDD_MEDIANO_FAM), color="grey") )+
+  geom_point( aes(x=REDD_MEDIANO_FAM, y=reorder(Territorio,REDD_MEDIANO_FAM), color=rgb(0.2,0.7,0.1,0.5), size=3 )) +
+  geom_point( aes(x=REDD_MEDIO_FAM, y=reorder(Territorio,REDD_MEDIANO_FAM), color=rgb(0.7,0.2,0.1,0.5), size=3 )) 
 gpopinc
+
+d<-popbyred %>% mutate(delta=REDD_MEDIO_FAM-REDD_MEDIANO_FAM)
+
 popoverview <-popbyred%>%filter(Territorio!="Italia")%>%
   ggplot()+
   geom_point(aes(x=`numero di famiglie al 31 dicembre`,y=reorder(Territorio,`numero di famiglie al 31 dicembre`)))

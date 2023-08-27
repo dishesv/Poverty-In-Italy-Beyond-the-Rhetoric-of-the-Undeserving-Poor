@@ -20,10 +20,12 @@ library(spdep)
 library(dplyr)
 library(expm)
 library(stats)
+
+
 hbs <- read.csv("spese2017_rid_edit.csv")
 degurba<-read.csv("degurba_comuni.csv")
-#hbs_2015 <- read.csv("spese2015.csv")
-#hbs_2016 <- read.csv("spese2016_rid_edit.csv")
+hbs_2015 <- read.csv("spese2015.csv")
+hbs_2016 <- read.csv("spese2016_rid_edit.csv")
 hbs$prov_1000<-(hbs$Cod_provincia_d)*1000
 hbs$codice_comune<-hbs$prov_1000+hbs$Cod_comune_d
 table(hbs$codice_comune)
@@ -50,12 +52,12 @@ sum(hbs$w_anno[hbs$povassc==1])
 
 ##ricalibro i pesi delle provincie 
 ni<-table(hbs$regione_degurba)
-#colnames(new_cov)<-sub("freq_pop", "prop_pop", colnames(new_cov))
-#cov_107<-new_cov[!(new_cov$Codice.territorio==2 | new_cov$Codice.territorio==103 | new_cov$Codice.territorio==105),]
-#hbs_104<-hbs[!(hbs$Cod_provincia_d==104 | hbs$Cod_provincia_d==106 | hbs$Cod_provincia_d==107),]
-#cov_104<-cov_107[!(cov_107$Codice_prov==104 | cov_107$Codice_prov==106 | cov_107$Codice_prov==107),]
+colnames(new_cov)<-sub("freq_pop", "prop_pop", colnames(new_cov))
+cov_107<-new_cov[!(new_cov$Codice.territorio==2 | new_cov$Codice.territorio==103 | new_cov$Codice.territorio==105),]
+hbs_104<-hbs[!(hbs$Cod_provincia_d==104 | hbs$Cod_provincia_d==106 | hbs$Cod_provincia_d==107),]
+cov_104<-cov_107[!(cov_107$Codice_prov==104 | cov_107$Codice_prov==106 | cov_107$Codice_prov==107),]
 
-#length(cov_107)
+length(cov_107)
 
 #there are 107 provinces out of 110
 Ni.err<-as.numeric(tapply(hbs$w_anno,hbs$regione_degurba,sum))
