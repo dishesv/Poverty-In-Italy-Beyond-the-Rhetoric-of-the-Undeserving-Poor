@@ -133,9 +133,13 @@ check2021<-rbind(check2021a,check2021b) #this were the missing matches, 5 rows o
 degurba_facts <- classified_units%>%
   group_by()
 
-
-
-
+#######Integration with HBS#########
+AVQ_Microdati_2019 <- read_delim("Dataset/SAE/HBS/AVQ_Microdati_2019.txt", 
+                                 delim = "\t", escape_double = FALSE, 
+                                 trim_ws = TRUE)
+colnames(AVQ_Microdati_2019)
+#povassc
+#rgn
 
 
 ######VIZ######
