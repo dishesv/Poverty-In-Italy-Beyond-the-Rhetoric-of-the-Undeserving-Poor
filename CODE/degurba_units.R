@@ -128,12 +128,99 @@ check2021b <- Redditi_IRPEF_2021%>%
 colnames(check2021b)=c("name","codcat")
 check2021<-rbind(check2021a,check2021b) #this were the missing matches, 5 rows only
 
-
+######INSIGHTS##### now on degurba, bur can be made also with the threefold comune type classification
 #here i want to know % of the three categories for the 4 levels; national, area, region and province
-degurba_facts <- classified_units%>%
-  group_by()
+colnames(classified_units)[6] <- "area"
+colnames(classified_units)[7] <- "reg_code"
+colnames(classified_units)[8] <- "Regione"
+colnames(classified_units)[10] <- "Provincia"
+colnames(classified_units)[14] <- "prov_code"
 
-#######Integration with HBS#########
+
+degurba_facts_prov <- classified_units%>%
+  group_by(area,Regione,reg_code, Provincia, prov_code)%>%
+  summarise(
+    n = n(),
+    D1 = sum(DGURBA==1),
+    D2 = sum(DGURBA==2),
+    D3 = sum(DGURBA==3)
+  )
+degurba_facts_prov<-degurba_facts_prov%>%
+  mutate(D1_prc = round(D1/n,2),
+         D2_prc = round(D2/n,2),
+         D3_prc = round(D3/n,2),
+         deg_prov = case_when(D1_prc>0.49 ~ "D1",
+                              D2_prc>0.49 ~ "D2",
+                              D3_prc>0.49 ~ "D3"))
+
+degurba_facts_region <- degurba_facts_prov%>%
+  group_by(area,Regione, reg_code)%>%
+  summarise(
+    n_com = sum(n),
+    n_prov = n(),
+    D1 = sum(D1),
+    D2 = sum(D2),
+    D3 = sum(D3)
+  )
+degurba_facts_region<-degurba_facts_region%>%
+  mutate(D1_prc = round(D1/n_com,2),
+         D2_prc = round(D2/n_com,2),
+         D3_prc = round(D3/n_com,2),
+         deg_reg = case_when(D1_prc>0.49 ~ "D1",
+                              D2_prc>0.49 ~ "D2",
+                              D3_prc>0.49 ~ "D3"))
+
+
+degurba_facts_area <- degurba_facts_region%>%
+  group_by(area)%>%
+  summarise(
+    n_com = sum(n_com),
+    n_prov = sum(n_prov),
+    n_reg = n(),
+    D1 = sum(D1),
+    D2 = sum(D2),
+    D3 = sum(D3)
+  )
+degurba_facts_area<-degurba_facts_area%>%
+  mutate(D1_prc = round(D1/n_com,2),
+         D2_prc = round(D2/n_com,2),
+         D3_prc = round(D3/n_com,2),
+         deg_area = case_when(D1_prc>0.49 ~ "D1",
+                              D2_prc>0.49 ~ "D2",
+                              D3_prc>0.49 ~ "D3"))
+
+degurba_facts <-degurba_facts_area%>%
+  summarise(
+    n_com = sum(n_com),
+    n_prov = sum(n_prov),
+    n_reg = sum(n_reg),
+    D1 = sum(D1),
+    D2 = sum(D2),
+    D3 = sum(D3)
+  )
+degurba_facts<-degurba_facts%>%
+  mutate(D1_prc = round(D1/n_com,2),
+         D2_prc = round(D2/n_com,2),
+         D3_prc = round(D3/n_com,2))
+
+deg_match <- degurba_facts_prov%>%
+  select(c(area, reg_code, prov_code, deg_prov))%>%
+  inner_join(degurba_facts_region%>%
+               select(deg_reg,reg_code))%>%
+  inner_join(degurba_facts_area%>%
+               select(area, deg_area))
+
+deg_viz <- classified_units%>%
+  select(c(3,4,7,8,9,10,11))%>%
+  inner_join(deg_match)%>%
+  mutate(DGURBA = as.factor(DGURBA),
+         deg_prov = as.factor(deg_prov),
+         deg_reg = as.factor(deg_reg),
+         deg_area = as.factor(deg_area))
+library(readr)
+write_delim(classified_units[,c(1,3,4,8,10)],delim=";", "DataViz/mapping.csv")
+
+#######Integration with HBS######### let's pray it will be possible
 AVQ_Microdati_2019 <- read_delim("Dataset/SAE/HBS/AVQ_Microdati_2019.txt", 
                                  delim = "\t", escape_double = FALSE, 
                                  trim_ws = TRUE)
@@ -145,8 +232,26 @@ colnames(AVQ_Microdati_2019)
 ######VIZ######
 library(ggplot2)
 
-degurba_units%>%
+mun<-deg_viz%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry, fill=DGURBA, color=DGURBA)) + 
-  ggtitle("Italy by Degree of Urbanization") + 
+  ggtitle("Italy by Degree of Urbanization - Municipality ") + 
+  coord_sf()
+
+prov<-deg_viz%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry, fill=deg_prov, color=deg_prov)) + 
+  ggtitle("Italy by Degree of Urbanization - Province") + 
+  coord_sf()
+
+reg<-deg_viz%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry, fill=deg_reg, color=deg_reg)) + 
+  ggtitle("Italy by Degree of Urbanization - Region") + 
+  coord_sf()
+
+area<-deg_viz%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry, fill=deg_area, color=deg_area)) + 
+  ggtitle("Italy by Degree of Urbanization - Area") + 
   coord_sf()
