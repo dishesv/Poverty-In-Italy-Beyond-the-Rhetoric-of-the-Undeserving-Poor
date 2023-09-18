@@ -1,4 +1,4 @@
-#CREATION OF THE DEGURBA CLASSIFICATION FILE
+######CREATION OF THE DEGURBA CLASSIFICATION FILE#######
 
 install.packages("sf")
 install.packages("dplyr")
@@ -9,7 +9,7 @@ library(sf)
 library(dplyr)
 library(magrittr)
 library(readr)
-library(cartography)
+#library(cartography)
 
 setwd("~/UNI/THESIS/Poverty-In-Italy-Beyond-the-Rhetoric-of-the-Undeserving-Poor")
 
@@ -87,7 +87,7 @@ missingterdenom<-denominazioni_territoriali%>%
 
 #Importing and matching the variables to the units
 Redditi_IRPEF_2019 <- read_delim("Dataset/SAE/COV/Redditi_e_principali_variabili_IRPEF_su_base_comunale_CSV_2019.csv", 
-                                                                             delim = ";", escape_double = FALSE, trim_ws = TRUE)
+                                 delim = ";", escape_double = FALSE, col_types = cols(`Codice Istat Regione` = col_integer()), trim_ws = TRUE)
 Redditi_IRPEF_2020 <- read_delim("Dataset/SAE/COV/Redditi_e_principali_variabili_IRPEF_su_base_comunale_CSV_2020.csv", 
                                  delim = ";", escape_double = FALSE, trim_ws = TRUE)
 Redditi_IRPEF_2021 <- read_delim("Dataset/SAE/COV/Redditi_e_principali_variabili_IRPEF_su_base_comunale_CSV_2021.csv", 
@@ -128,7 +128,39 @@ check2021b <- Redditi_IRPEF_2021%>%
 colnames(check2021b)=c("name","codcat")
 check2021<-rbind(check2021a,check2021b) #this were the missing matches, 5 rows only
 
-######INSIGHTS##### now on degurba, bur can be made also with the threefold comune type classification
+Red_19 <- Redditi_IRPEF_2019[,c(1:8,13,14,35:50)]
+colnames(Red_19)[9:26]<-c("count_retired","pensions","count_0","zero_or_less","count_10k","10k","count_10_15k","10_15k",
+                          "count_15_26k","15_26k","count_26_55k","26_55k","count_55_75k","55_75k",
+                          "count_75_120k","75_120k","count_120k+","120k+")
+Red_19 <- Red_19%>%
+  mutate(
+    avg_pension = pensions/count_retired,
+    avg0 = zero_or_less/count_0 ,
+    avg10 = `10k`/count_10k,
+    avg15 = `10_15k`/count_10_15k,
+    avg26 = `15_26k`/count_15_26k,
+    avg55 = `26_55k`/count_26_55k,
+    avg75 = `55_75k`/count_55_75k,
+    avg120 = `75_120k`/count_75_120k,
+    avg_over_120 = `120k+`/`count_120k+`)
+#more manipulation of this dataset will be done
+harmonize_region_code <- cbind(
+  1:20,
+  ITTER107
+)
+harmonize_region_code <- as.data.frame(harmonize_region_code)%>%
+  mutate(V1 = as.integer(V1))
+colnames(harmonize_region_code)<- c("Codice Istat Regione","ITTER107")
+Region_19 <- Red_19%>%
+  full_join(harmonize_region_code)
+Region_19 <- Region_19%>%
+  left_join(povrelbyregion19_21%>%
+              filter(TIME=="2019"))
+
+
+
+########INSIGHTS######
+# now on degurba, bur can be made also with the threefold comune type classification
 #here i want to know % of the three categories for the 4 levels; national, area, region and province
 colnames(classified_units)[6] <- "area"
 colnames(classified_units)[7] <- "reg_code"
@@ -221,10 +253,10 @@ library(readr)
 write_delim(classified_units[,c(1,3,4,8,10)],delim=";", "DataViz/mapping.csv")
 
 #######Integration with HBS######### let's pray it will be possible
-AVQ_Microdati_2019 <- read_delim("Dataset/SAE/HBS/AVQ_Microdati_2019.txt", 
-                                 delim = "\t", escape_double = FALSE, 
-                                 trim_ws = TRUE)
-colnames(AVQ_Microdati_2019)
+#AVQ_Microdati_2019 <- read_delim("Dataset/SAE/HBS/AVQ_Microdati_2019.txt", 
+#                                 delim = "\t", escape_double = FALSE, 
+#                                 trim_ws = TRUE)
+#colnames(AVQ_Microdati_2019)
 #povassc
 #rgn
 
