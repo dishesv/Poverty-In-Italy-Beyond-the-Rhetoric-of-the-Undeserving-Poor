@@ -1,5 +1,3 @@
-#momentarily adjust the namings for the columns of 2019
-#colnames(Red_19_gbregionanddegurba_units)[c(51,55:61)]<-c('%lavdip','%10k','%15k','%26k','%55k','%75k','%120k','%120+k')
 library(tidymodels)
 #2019
 modelling_ <- modelling_estimates19

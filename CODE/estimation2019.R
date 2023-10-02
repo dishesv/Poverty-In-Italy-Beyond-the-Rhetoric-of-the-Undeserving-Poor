@@ -40,7 +40,7 @@ Red_19<- Red_19%>%
 ###Group by region and group by regXdegurba###
 #####regionXdegurba#####
 units_rd_19<- classified_units%>%
-  select(c(LAU_NAME,`Codice Catastale del comune`,DGURBA, geometry))%>%
+  dplyr::select(c(LAU_NAME,`Codice Catastale del comune`,DGURBA, geometry))%>%
   left_join(Red_19,join_by(`Codice Catastale del comune`==`Codice catastale`))
 
 Red_19_gbregdeg<-units_rd_19%>%

@@ -53,7 +53,7 @@ denominazioni_territoriali <- read_delim("Dataset/SAE/denominazioni_territoriali
                                          delim = "\t", escape_double = FALSE, 
                                          trim_ws = TRUE)
 denominazioni_territoriali<- denominazioni_territoriali%>%
-  select(c("Denominazione (Italiana e straniera)",
+  dplyr::select(c("Denominazione (Italiana e straniera)",
            "Codice Ripartizione Geografica",
            "Ripartizione geografica",
            "Codice Regione",
@@ -92,7 +92,7 @@ denominazioni_territoriali <- denominazioni_territoriali%>%
 library(sf)
 library(dplyr)
 classified_units<-degurba_units%>%
-  select(c(LAU_NAME,LAU_ID,DGURBA,geometry))%>%
+  dplyr::select(c(LAU_NAME,LAU_ID,DGURBA,geometry))%>%
   inner_join(denominazioni_territoriali,join_by("LAU_NAME"=="Denominazione (Italiana e straniera)"))
 #There are two Samone (one in Piemonte (LAU_ID 001235) the other in TAAD(LAU_ID 022165)) but they have the same degurba (2)
 rown_samone = c(which(classified_units$`Codice Regione` == 1&classified_units$LAU_ID=="022165"),
@@ -101,11 +101,11 @@ classified_units<-classified_units%>%
   filter(!row_number() %in% rown_samone)
 
 missingdegurba<-degurba_units%>%
-  select(LAU_NAME)%>%
+  dplyr::select(LAU_NAME)%>%
   anti_join((denominazioni_territoriali ),join_by("LAU_NAME"=="Denominazione (Italiana e straniera)"))
 
 missingterdenom<-denominazioni_territoriali%>%
-  select(c("Denominazione (Italiana e straniera)",`Denominazione in italiano`))%>%
+  dplyr::select(c("Denominazione (Italiana e straniera)",`Denominazione in italiano`))%>%
   anti_join((degurba_units ),join_by("Denominazione (Italiana e straniera)"=="LAU_NAME"))
 ##Statistics on degurba ----
 # now on degurba, bur can be made also with the threefold comune type classification
@@ -184,14 +184,14 @@ degurba_facts<-degurba_facts%>%
          D3_prc = round(D3/n_com,2))
 
 deg_match <- degurba_facts_prov%>%
-  select(c(area, reg_code, prov_code, deg_prov))%>%
+  dplyr::select(c(area, reg_code, prov_code, deg_prov))%>%
   inner_join(degurba_facts_region%>%
-               select(deg_reg,reg_code))%>%
+               dplyr::select(deg_reg,reg_code))%>%
   inner_join(degurba_facts_area%>%
-               select(area, deg_area))
+               dplyr::select(area, deg_area))
 ## Prepping the structure to visualise it ----
 deg_viz <- classified_units%>%
-  select(c(3,4,7,8,9,10,11))%>%
+  dplyr::select(c(3,4,7,8,9,10,11))%>%
   inner_join(deg_match)%>%
   mutate(DGURBA = as.factor(DGURBA),
          deg_prov = as.factor(deg_prov),
@@ -290,7 +290,7 @@ colnames(HBS21)<-c("rgn","rip","notpov","pov","tot_weights","ITTER107","TIME")
 
 povass21 <- HBS21%>%
   left_join(povrelbyregion19_21%>%
-              select(c(ITTER107, TIME, Territorio, households_tot)))
+              dplyr::select(c(ITTER107, TIME, Territorio, households_tot)))
 povass21 <- povass21%>%
   mutate(diffhouseholdstot = round((tot_weights-households_tot)/tot_weights,3))
 #comment on the difference on households_tot and tot_weights 
@@ -300,7 +300,7 @@ targeting_pass<-targeting_pass%>%
   mutate(cov_rate = round(households/(pov*tot_weights),3)*100)
 
 households_regional_coverage_rate_povass <- targeting_pass%>%
-  select(Territorio, TIME, cov_rate)
+  dplyr::select(Territorio, TIME, cov_rate)
 
 #Prepping the structure for visualisation
 households_regional_coverage_rate_povrel<- households_regional_coverage_rate_povrel%>%
@@ -332,38 +332,38 @@ Redditi_IRPEF_2020 <- read_delim("Dataset/SAE/COV/Redditi_e_principali_variabili
 Redditi_IRPEF_2021 <- read_delim("Dataset/SAE/COV/Redditi_e_principali_variabili_IRPEF_su_base_comunale_CSV_2021.csv", 
                                  delim = ";", escape_double = FALSE, trim_ws = TRUE)
 check2019a <- classified_units%>%
-  select(c(LAU_NAME,`Codice Catastale del comune`))%>%
+  dplyr::select(c(LAU_NAME,`Codice Catastale del comune`))%>%
   anti_join(Redditi_IRPEF_2019,join_by(`Codice Catastale del comune`==`Codice catastale`))%>%
-  select(c(LAU_NAME,`Codice Catastale del comune`))
+  dplyr::select(c(LAU_NAME,`Codice Catastale del comune`))
 colnames(check2019a)=c("name","codcat")
 check2019b <- Redditi_IRPEF_2019%>%
-  select(c(`Codice catastale`,`Denominazione Comune`))%>%
+  dplyr::select(c(`Codice catastale`,`Denominazione Comune`))%>%
   anti_join(classified_units,join_by(`Codice catastale`==`Codice Catastale del comune`))%>%
-  select(c(`Denominazione Comune`,`Codice catastale`))
+  dplyr::select(c(`Denominazione Comune`,`Codice catastale`))
 colnames(check2019b)=c("name","codcat")
 check2019<-rbind(check2019a,check2019b) #this were the missing matches, 9 places only
 
 check2020a <- classified_units%>%
-  select(c(LAU_NAME,`Codice Catastale del comune`))%>%
+  dplyr::select(c(LAU_NAME,`Codice Catastale del comune`))%>%
   anti_join(Redditi_IRPEF_2020,join_by(`Codice Catastale del comune`==`Codice catastale`))%>%
-  select(c(LAU_NAME,`Codice Catastale del comune`))
+  dplyr::select(c(LAU_NAME,`Codice Catastale del comune`))
 colnames(check2020a)=c("name","codcat")
 check2020b <- Redditi_IRPEF_2020%>%
-  select(c(`Codice catastale`,`Denominazione Comune`))%>%
+  dplyr::select(c(`Codice catastale`,`Denominazione Comune`))%>%
   anti_join(classified_units,join_by(`Codice catastale`==`Codice Catastale del comune`))%>%
-  select(c(`Denominazione Comune`,`Codice catastale`))
+  dplyr::select(c(`Denominazione Comune`,`Codice catastale`))
 colnames(check2020b)=c("name","codcat")
 check2020<-rbind(check2020a,check2020b) #this were the missing matches, 4 rows only
 
 check2021a <- classified_units%>%
-  select(c(LAU_NAME,`Codice Catastale del comune`))%>%
+  dplyr::select(c(LAU_NAME,`Codice Catastale del comune`))%>%
   anti_join(Redditi_IRPEF_2021,join_by(`Codice Catastale del comune`==`Codice catastale`))%>%
-  select(c(LAU_NAME,`Codice Catastale del comune`))
+  dplyr::select(c(LAU_NAME,`Codice Catastale del comune`))
 colnames(check2021a)=c("name","codcat")
 check2021b <- Redditi_IRPEF_2021%>%
-  select(c(`Codice catastale`,`Denominazione Comune`))%>%
+  dplyr::select(c(`Codice catastale`,`Denominazione Comune`))%>%
   anti_join(classified_units,join_by(`Codice catastale`==`Codice Catastale del comune`))%>%
-  select(c(`Denominazione Comune`,`Codice catastale`))
+  dplyr::select(c(`Denominazione Comune`,`Codice catastale`))
 colnames(check2021b)=c("name","codcat")
 check2021<-rbind(check2021a,check2021b) #this were the missing matches, 5 rows only
 #see the the relative files:
@@ -373,6 +373,9 @@ check2021<-rbind(check2021a,check2021b) #this were the missing matches, 5 rows o
 ##estimation2021.R
 
 ##see file models.R 
+
+# SAE ----
+
 if (!require('sae', quietly = TRUE)) { install.packages('sae') } 
 library('sae')
 #### 19----
@@ -511,31 +514,39 @@ library(ggplot2)
 library(viridis)
 dev.off()
 ## DEGURBA ----
+palette <- c(d1 = "#37123C", d2 = "#71677C", d3 = "#945D5E")
 mun<-deg_viz%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry, fill=DGURBA, color=DGURBA)) + 
   ggtitle("Italy by Degree of Urbanization - Municipality ") + 
-  scale_fill_manual()+
-  scale_color_manual()+ 
+  scale_fill_manual(values=c("#37123C","#71677C","#DDA77B"))+
+  scale_color_manual(values=c("#37123C","#71677C","#DDA77B"))+ 
   coord_sf()
 mun
 prov<-deg_viz%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry, fill=deg_prov, color=deg_prov)) + 
-  ggtitle("Italy by Degree of Urbanization - Province") + 
+  ggtitle("Italy by Degree of Urbanization - Province")  + 
+  scale_fill_manual(values=c("#37123C","#71677C","#DDA77B"))+
+  scale_color_manual(values=c("#37123C","#71677C","#DDA77B"))+ 
   coord_sf()
-
+prov
 reg<-deg_viz%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry, fill=deg_reg, color=deg_reg)) + 
-  ggtitle("Italy by Degree of Urbanization - Region") + 
+  ggtitle("Italy by Degree of Urbanization - Region")  + 
+  scale_fill_manual(values=c("#71677C","#DDA77B"))+
+  scale_color_manual(values=c("#71677C","#DDA77B"))+ 
   coord_sf()
-
+reg
 area<-deg_viz%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry, fill=deg_area, color=deg_area)) + 
-  ggtitle("Italy by Degree of Urbanization - Area") + 
+  ggtitle("Italy by Degree of Urbanization - Area")  + 
+  scale_fill_manual(values=c("#DDA77B"))+
+  scale_color_manual(values=c("#DDA77B"))+ 
   coord_sf()
+area
 ## SAE ----
 saeviz <- rbind(units_result19,units_result20,units_result21)
 SAE_map<-saeviz%>%
@@ -576,6 +587,7 @@ SAE_val<- result%>%
   pivot_wider(names_from = TIME, 
                      values_from = FH_EBLUP)%>%
   mutate(ITTER107 = as.factor(ITTER107))
+SAE_val <- rbind()#add national avg
 SAE_val_deg <-ggparcoord(SAE_val, columns = 4:6, groupColumn = 1, order = "anyClass",
              scale="globalminmax",
              showPoints = TRUE, 
