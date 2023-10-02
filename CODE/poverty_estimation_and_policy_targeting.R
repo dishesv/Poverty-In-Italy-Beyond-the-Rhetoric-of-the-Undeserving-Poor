@@ -1,29 +1,50 @@
-install.packages("sf")
-install.packages("dplyr")
-install.packages("magrittr")
-install.packages("cartography")
-
-library(sf)
-library(dplyr)
-library(magrittr)
-library(readr)
-library(dplyr)
-library(tidyr)
-
 setwd("~/UNI/THESIS/Poverty-In-Italy-Beyond-the-Rhetoric-of-the-Undeserving-Poor")
+#####for easier joins#####
+ITTER107 = c("ITC1", "ITC2", "ITC4", "ITDA",
+             "ITD3", "ITD4", "ITC3", "ITD5" ,"ITE1", "ITE2",
+             "ITE3" ,"ITE4" ,"ITF1" ,"ITF2", "ITF3",
+             "ITF4", "ITF5", "ITF6" ,"ITG1" ,"ITG2")
+harmonize_region_code <- cbind(
+  1:20,
+  ITTER107,
+  c(  "Piemonte" ,"Valle d'Aosta"  ,"Lombardia", "Trentino Alto Adige" , "Veneto" ,              
+      "Friuli Venezia Giulia" ,  "Liguria"  ,   "Emilia Romagna" ,
+      "Toscana" , "Umbria"  , "Marche" , "Lazio" ,
+      "Abruzzo"  , "Molise" ,  "Campania"  , "Puglia" ,         
+      "Basilicata"  , "Calabria","Sicilia" ,  "Sardegna" )
+)
+harmonize_region_code <- as.data.frame(harmonize_region_code)%>%
+  mutate(V1 = as.integer(V1),
+         V3 = as.factor(V3))
+colnames(harmonize_region_code)<-c("Codice Istat Regione","ITTER107","name")
+smallareas <- data.frame(c("Abruzzo_1","Abruzzo_2","Abruzzo_3","Basilicata_1" ,"Basilicata_2",           
+"Basilicata_3","Calabria_1","Calabria_2" ,"Calabria_3","Campania_1" ,            
+"Campania_2","Campania_3" ,"Emilia Romagna_1","Emilia Romagna_2",       
+"Emilia Romagna_3", "Friuli Venezia Giulia_1","Friuli Venezia Giulia_2",
+"Friuli Venezia Giulia_3","Lazio_1","Lazio_2" ,"Lazio_3" ,               
+"Liguria_1","Liguria_2","Liguria_3","Lombardia_1","Lombardia_2",            
+"Lombardia_3","Marche_1","Marche_2","Marche_3","Molise_1","Molise_2",               
+"Molise_3","Piemonte_1","Piemonte_2","Piemonte_3","Puglia_1","Puglia_2",               
+"Puglia_3","Sardegna_1", "Sardegna_2","Sardegna_3","Sicilia_1","Sicilia_2",              
+"Sicilia_3","Toscana_1","Toscana_2","Toscana_3","Trentino Alto Adige_1",  
+"Trentino Alto Adige_2","Trentino Alto Adige_3","Umbria_1","Umbria_2","Umbria_3",               
+"Valle d'Aosta_2","Valle d'Aosta_3","Veneto_1","Veneto_2","Veneto_3"), 
+ c(13,13,13,17,17,17,18,18,18,15,15,15,8,8,8,6,6,6,
+   12,12,12,7,7,7,3,3,3,11,11,11,14,14,14,1,1,1,
+   16,16,16,20,20,20,19,19,19,9,9,9,4,4,4,
+   10,10,10,2,2,5,5,5) )  
+colnames(smallareas)<-c("smarea","ISTAT_code")
+smallareas <- smallareas %>%
+  mutate(ISTAT_code = as.integer(ISTAT_code))%>%
+  left_join(harmonize_region_code, join_by(ISTAT_code=="Codice Istat Regione"))
 
-#####DEGURBA####
+#DEGURBA####
 shapefile <- st_read("Dataset/SAE/DGURBA-2020-01M-SH/DGURBA-2020-01M-SH.shp")
 degurba_units <- shapefile %>%
   filter(CNTR_CODE == "IT") %>%
   mutate(DGURBA = as.factor(DGURBA))%>%
   as_tibble()
-
-#degurba_units<-degurba_units%>%
-#  mutate(LAU_NAME = case_when(LAU_NAME=="Bardello"~"Bardello con Malgesso e Bregano",
-#                              LAU_NAME=="Moransengo"~"Moransengo-Tonengo",
-#                              LAU_ID=="031022"~"Savogna d'Isonzo",
-#                              TRUE~LAU_NAME))
+library(dplyr)
 degurba_units<-degurba_units%>%
   mutate(LAU_NAME = case_when(LAU_ID=="031022"~"Savogna d'Isonzo",
                               TRUE~LAU_NAME))
@@ -68,6 +89,8 @@ denominazioni_territoriali <- denominazioni_territoriali%>%
     TRUE ~`Denominazione (Italiana e straniera)`
   ))
 
+library(sf)
+library(dplyr)
 classified_units<-degurba_units%>%
   select(c(LAU_NAME,LAU_ID,DGURBA,geometry))%>%
   inner_join(denominazioni_territoriali,join_by("LAU_NAME"=="Denominazione (Italiana e straniera)"))
@@ -84,7 +107,7 @@ missingdegurba<-degurba_units%>%
 missingterdenom<-denominazioni_territoriali%>%
   select(c("Denominazione (Italiana e straniera)",`Denominazione in italiano`))%>%
   anti_join((degurba_units ),join_by("Denominazione (Italiana e straniera)"=="LAU_NAME"))
-######Statistics on degurba######
+##Statistics on degurba ----
 # now on degurba, bur can be made also with the threefold comune type classification
 #here i want to know % of the three categories for the 4 levels; national, area, region and province
 colnames(classified_units)[6] <- "area"
@@ -166,7 +189,7 @@ deg_match <- degurba_facts_prov%>%
                select(deg_reg,reg_code))%>%
   inner_join(degurba_facts_area%>%
                select(area, deg_area))
-#Prepping the structure to visualise it
+## Prepping the structure to visualise it ----
 deg_viz <- classified_units%>%
   select(c(3,4,7,8,9,10,11))%>%
   inner_join(deg_match)%>%
@@ -175,8 +198,9 @@ deg_viz <- classified_units%>%
          deg_reg = as.factor(deg_reg),
          deg_area = as.factor(deg_area))
 
-####POLICY TARGETING - Regional available data####
+#POLICY TARGETING - Regional available data ----
 #1: with regional data
+library(readr)
 recipients19_23 <- read_delim("Dataset/RDC/nuclei_e_importi_per_anno_e_regione.csv", 
                               delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",",                                                                                                   grouping_mark = ""), trim_ws = TRUE)
 recipients19_23 <- recipients19_23%>%
@@ -226,23 +250,22 @@ households_reg<-rbind(households_reg,households_PAs)
 
 povrelbyregion19_21 <- povrelbyregion19_21%>%
   left_join(households_reg)%>%
-  mutate(rel_poor_hous = households_tot*Value)
+  mutate(rel_poor_hous = households_tot*(Value/100))
 
 by = join_by("Territorio"=="regione", "TIME"=="Anno")
 targeting <- left_join(povrelbyregion19_21, recipients19_23,by )
 targeting<-targeting%>%
-  mutate(cov_rate = round(households/rel_poor_hous * 100,3))
+  mutate(cov_rate = households/rel_poor_hous * 100)
 
-#Valle D'Aosta's households in relative poverty in 2021 is NA so is proxied by 2020's value
-targeting[which(targeting$ITTER107=="ITC2"& targeting$TIME=="2021"),11]=0.476
+#Valle D'Aosta's households in relative poverty in 2021 is NA so is proxied by 2020's value 1560/3277.692
+targeting[which(targeting$ITTER107=="ITC2"& targeting$TIME=="2021"),11]=47.59447
 
-households_regional_coverage_rate_povrel <- targeting%>%
-  select(Territorio, TIME, cov_rate)
-
+households_regional_coverage_rate_povrel <- targeting[,c(1,2,4,11)]
+  
 #######Incidence-based Absolute Poverty Coverage Rate and Relative Poverty Coverage Rate
 #we have an issue here: Istat releases regional data only on relative poverty. abs
 #poverty must be retreived by the HBS. Only the edition of 2021 has the variable povassc.
-HBS_2021 <- read_delim("Dataset/SAE/HBS_Microdati_2021.txt", 
+HBS_2021 <- read_delim("Dataset/SAE/HBS_21/HBS_Microdati_2021.txt", 
                        delim = "\t", escape_double = FALSE, 
                        trim_ws = TRUE)
 HBS21 <- HBS_2021[,c(1291,1293:1295)]
@@ -260,10 +283,7 @@ HBS21 <- HBS21%>%
     pov = pov/tot,
     notpov = notpov/tot
   )
-ITTER107 = c("ITC1", "ITC2", "ITC4", "ITDA",
-             "ITD3", "ITD4", "ITC3", "ITD5" ,"ITE1", "ITE2",
-             "ITE3" ,"ITE4" ,"ITF1" ,"ITF2", "ITF3",
-             "ITF4", "ITF5", "ITF6" ,"ITG1" ,"ITG2")
+
 TIME = rep(2021,20)
 HBS21 <- cbind(HBS21,ITTER107,TIME)
 colnames(HBS21)<-c("rgn","rip","notpov","pov","tot_weights","ITTER107","TIME")
@@ -303,8 +323,8 @@ viz_cr_region21 <- households_regional_coverage_rate_povrel%>%
   filter(TIME=="2021")%>%
   right_join(deg_viz, join_by("Territorio"=="Regione"))
 
-####IRPEF data and Poerty estimation#####
-#Importing and matching the variables to the degurba units
+#IRPEF data and Poverty estimation ----
+### Importing and matching the variables to the degurba units ----
 Redditi_IRPEF_2019 <- read_delim("Dataset/SAE/COV/Redditi_e_principali_variabili_IRPEF_su_base_comunale_CSV_2019.csv", 
                                  delim = ";", escape_double = FALSE, col_types = cols(`Codice Istat Regione` = col_integer()), trim_ws = TRUE)
 Redditi_IRPEF_2020 <- read_delim("Dataset/SAE/COV/Redditi_e_principali_variabili_IRPEF_su_base_comunale_CSV_2020.csv", 
@@ -321,7 +341,7 @@ check2019b <- Redditi_IRPEF_2019%>%
   anti_join(classified_units,join_by(`Codice catastale`==`Codice Catastale del comune`))%>%
   select(c(`Denominazione Comune`,`Codice catastale`))
 colnames(check2019b)=c("name","codcat")
-check2019<-rbind(check2019a,check2019b) #this were the missing matches, 4 rows only
+check2019<-rbind(check2019a,check2019b) #this were the missing matches, 9 places only
 
 check2020a <- classified_units%>%
   select(c(LAU_NAME,`Codice Catastale del comune`))%>%
@@ -346,47 +366,159 @@ check2021b <- Redditi_IRPEF_2021%>%
   select(c(`Denominazione Comune`,`Codice catastale`))
 colnames(check2021b)=c("name","codcat")
 check2021<-rbind(check2021a,check2021b) #this were the missing matches, 5 rows only
+#see the the relative files:
 
-Red_19 <- Redditi_IRPEF_2019[,c(1:8,13,14,35:50)]
-colnames(Red_19)[9:26]<-c("count_retired","pensions","count_0","zero_or_less","count_10k","10k","count_10_15k","10_15k",
-                          "count_15_26k","15_26k","count_26_55k","26_55k","count_55_75k","55_75k",
-                          "count_75_120k","75_120k","count_120k+","120k+")
-Red_19 <- Red_19%>%
-  mutate(
-    avg_pension = pensions/count_retired,
-    avg0 = zero_or_less/count_0 ,
-    avg10 = `10k`/count_10k,
-    avg15 = `10_15k`/count_10_15k,
-    avg26 = `15_26k`/count_15_26k,
-    avg55 = `26_55k`/count_26_55k,
-    avg75 = `55_75k`/count_55_75k,
-    avg120 = `75_120k`/count_75_120k,
-    avg_over_120 = `120k+`/`count_120k+`)
-#more manipulation of this dataset will be done
-harmonize_region_code <- cbind(
-  1:20,
-  ITTER107
-)
-harmonize_region_code <- as.data.frame(harmonize_region_code)%>%
-  mutate(V1 = as.integer(V1))
-colnames(harmonize_region_code)<- c("Codice Istat Regione","ITTER107")
-Region_19 <- Red_19%>%
-  full_join(harmonize_region_code)
-Region_19 <- Region_19%>%
-  left_join(povrelbyregion19_21%>%
-              filter(TIME=="2019"))
+##estimation2019.R
+##estimation2020.R
+##estimation2021.R
 
+##see file models.R 
+if (!require('sae', quietly = TRUE)) { install.packages('sae') } 
+library('sae')
+#### 19----
+FH19 <- direst19
+FH19[is.na(FH19)] <- 0
+FH19 <- FH19%>%
+  mutate(CV = sd / yi)
+summary(FH19$CV*100)
 
-######VIZ######
+mod_FH <- mseFH(formula   = FH19$yi ~ as.factor(FH19$DGURBA), 
+                vardir    = FH19$Var,
+                method    = "REML",
+                MAXITER   = 1000,
+                PRECISION = 10^(-5),
+                B         = 0)
+
+FH_CV <- 100 * sqrt(mod_FH$mse) / mod_FH$est$eblup
+res_FH19<-data.frame(Publ_Area    = FH19$SmallArea,
+           Sample_Size  = FH19$ni,
+           Direct          = round(FH19$yi, digits = 2), 
+           CV       = round(FH19$CV * 100, digits = 2), 
+           FH_EBLUP     = round(mod_FH$est$eblup, digits = 2), 
+           FH_CV        = round(FH_CV, digits = 2),
+           TIME = 2019,
+           DGURBA = FH19$DGURBA)
+
+summary(res_FH19)
+
+CV_compare <- as.data.frame(cbind(cut(res_FH19$CV ,c(-0.01,16.5,33.3,100)),cut(res_FH19$FH_CV,c(-0.01,16.5,33.3,100))))
+CV_compare<-CV_compare%>%
+  summarise(
+    'Direct<16.5' = sum(V1==1) ,
+    'Direct16.51-33.3' = sum(V1==2),
+    'Direct>33.31'= sum(V1==3),
+    'FH<16.5'= sum(V2==1) ,
+    'FH16.51-33.3'= sum(V2==2),
+    'FH>33.31'= sum(V2==3),
+  )
+#### 20----
+FH20 <- direst20
+FH20[is.na(FH20)] <- 0
+FH20 <- FH20%>%
+  mutate(CV = sd / yi)
+summary(FH20$CV*100)
+
+mod_FH_20 <- mseFH(formula   = FH20$yi ~ as.factor(FH20$DGURBA), 
+                vardir    = FH20$Var,
+                method    = "REML",
+                MAXITER   = 1000,
+                PRECISION = 10^(-5),
+                B         = 0)
+
+FH_CV_20 <- 100 * sqrt(mod_FH_20$mse) / mod_FH_20$est$eblup
+res_FH20<-data.frame(Publ_Area    = FH20$SmallArea,
+                     Sample_Size  = FH20$ni,
+                     Direct          = round(FH20$yi, digits = 2), 
+                     CV       = round(FH20$CV * 100, digits = 2), 
+                     FH_EBLUP     = round(mod_FH_20$est$eblup, digits = 2), 
+                     FH_CV        = round(FH_CV_20, digits = 2),
+                     TIME = 2020,
+                     DGURBA = FH20$DGURBA)
+
+summary(res_FH20)
+
+CV_compare20 <- as.data.frame(cbind(cut(res_FH20$CV ,c(-0.01,16.5,33.3,100)),cut(res_FH20$FH_CV,c(-0.01,16.5,33.3,100))))
+CV_compare20[is.na(CV_compare20)] <- 0
+CV_compare20<-CV_compare20%>%
+  summarise(
+    'Direct<16.5' = sum(V1==1) ,
+    'Direct16.51-33.3' = sum(V1==2),
+    'Direct>33.31'= sum(V1==3),
+    'FH<16.5'= sum(V2==1) ,
+    'FH16.51-33.3'= sum(V2==2),
+    'FH>33.31'= sum(V2==3),
+  )
+
+#### 21----
+FH21 <- direst21
+FH21[is.na(FH21)] <- 0
+FH21 <- FH21%>%
+  mutate(CV = sd / yi)
+summary(FH21$CV*100)
+
+mod_FH_21 <- mseFH(formula   = FH21$yi ~ as.factor(FH21$DGURBA), 
+                   vardir    = FH21$Var,
+                   method    = "REML",
+                   MAXITER   = 1000,
+                   PRECISION = 10^(-5),
+                   B         = 0)
+
+FH_CV_21 <- 100 * sqrt(mod_FH_21$mse) / mod_FH_21$est$eblup
+res_FH21<-data.frame(Publ_Area    = FH21$SmallArea,
+                     Sample_Size  = FH21$ni,
+                     Direct          = round(FH21$yi, digits = 2), 
+                     CV       = round(FH21$CV * 100, digits = 2), 
+                     FH_EBLUP     = round(mod_FH_21$est$eblup, digits = 2), 
+                     FH_CV        = round(FH_CV_21, digits = 2),
+                     TIME = 2021,
+                     DGURBA = FH21$DGURBA)
+
+summary(res_FH21)
+
+CV_compare21 <- as.data.frame(cbind(cut(res_FH21$CV ,c(-0.01,16.5,33.3,100)),cut(res_FH21$FH_CV,c(-0.01,16.5,33.3,100))))
+CV_compare21[is.na(CV_compare21)] <- 0
+CV_compare21<-CV_compare21%>%
+  summarise(
+    'Direct<16.5' = sum(V1==1) ,
+    'Direct16.51-33.3' = sum(V1==2),
+    'Direct>33.31'= sum(V1==3),
+    'FH<16.5'= sum(V2==1) ,
+    'FH16.51-33.3'= sum(V2==2),
+    'FH>33.31'= sum(V2==3),
+  )
+##### preparing results for the visualization ----
+result <- smallareas%>% left_join(res_FH19, join_by(smarea == Publ_Area))
+result <- rbind(result,(smallareas%>% left_join(res_FH20, join_by(smarea == Publ_Area))))
+result <- rbind(result,(smallareas%>% left_join(res_FH21, join_by(smarea == Publ_Area))))
+result <- result[,-4]%>% left_join(povrelbyregion19_21[,c(1,4,5)])
+units_result19 <- classified_units%>%
+  left_join(result%>%
+              filter(TIME=="2019")%>%
+              mutate(ISTAT_code = as.character(ISTAT_code)),
+            join_by("reg_code"=="ISTAT_code","DGURBA"=="DGURBA"))
+units_result20 <- classified_units%>%
+  left_join(result%>%
+              filter(TIME=="2020")%>%
+              mutate(ISTAT_code = as.character(ISTAT_code)),
+            join_by("reg_code"=="ISTAT_code","DGURBA"=="DGURBA"))
+units_result21 <- classified_units%>%
+  left_join(result%>%
+              filter(TIME=="2021")%>%
+              mutate(ISTAT_code = as.character(ISTAT_code)),
+            join_by("reg_code"=="ISTAT_code","DGURBA"=="DGURBA"))
+# VIZ ----
 library(ggplot2)
-
-#DEGURBA
+library(viridis)
+dev.off()
+## DEGURBA ----
 mun<-deg_viz%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry, fill=DGURBA, color=DGURBA)) + 
   ggtitle("Italy by Degree of Urbanization - Municipality ") + 
+  scale_fill_manual()+
+  scale_color_manual()+ 
   coord_sf()
-
+mun
 prov<-deg_viz%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry, fill=deg_prov, color=deg_prov)) + 
@@ -404,18 +536,90 @@ area<-deg_viz%>%
   geom_sf(aes(geometry = geometry, fill=deg_area, color=deg_area)) + 
   ggtitle("Italy by Degree of Urbanization - Area") + 
   coord_sf()
+## SAE ----
+saeviz <- rbind(units_result19,units_result20,units_result21)
+SAE_map<-saeviz%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry,fill=FH_EBLUP,color=FH_EBLUP)) + 
+  ggtitle("Small-Area-Estimated Relative Poverty - Region x DEGURBA") + 
+  coord_sf() + 
+  scale_fill_viridis_c(option = "plasma")+
+  scale_color_viridis_c(option = "plasma")+ 
+  facet_grid(. ~ TIME)
+SAE_map
 
-#TARGETING
+saeviz<-saeviz%>%
+  mutate(FH_nas = ifelse(FH_CV>33.3,NA,FH_EBLUP))
+SAE_map_accurate<-saeviz%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry,fill=FH_nas,color=FH_nas)) + 
+  ggtitle("Small-Area-Estimated Relative Poverty - Region x DEGURBA\nAccounting for CV>33.3") + 
+  coord_sf() + 
+  scale_fill_viridis_c(option = "plasma")+
+  scale_color_viridis_c(option = "plasma")+ 
+  facet_grid(. ~ TIME)
+SAE_map_accurate
+
+SAE_map_direct<-saeviz%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry,fill=Direct,color=Direct)) + 
+  ggtitle("Relative Poverty - Direct estimates") + 
+  coord_sf() + 
+  scale_fill_viridis_c(option = "plasma")+
+  scale_color_viridis_c(option = "plasma")+ 
+  facet_grid(. ~ TIME)
+SAE_map_direct
+
+library(GGally)
+SAE_val<- result%>%
+  dplyr::select(c("TIME", "DGURBA", "FH_EBLUP","smarea","ITTER107"))%>%
+  pivot_wider(names_from = TIME, 
+                     values_from = FH_EBLUP)%>%
+  mutate(ITTER107 = as.factor(ITTER107))
+SAE_val_deg <-ggparcoord(SAE_val, columns = 4:6, groupColumn = 1, order = "anyClass",
+             scale="globalminmax",
+             showPoints = TRUE, 
+             title = "Trend of Relative Poverty - by DEGURBA",
+             alphaLines = 0.3
+  ) + 
+  xlab("")
+SAE_val_deg
+#add national average in a contrasting colour - set useful colours
+
+SAE_val_reg<- ggparcoord(SAE_val, columns = 4:6, groupColumn = 3, order = "anyClass",
+                         scale="globalminmax",
+                         showPoints = TRUE, 
+                         title = "Trend of Relative Poverty - by DEGURBA",
+                         alphaLines = 0.3
+) + 
+  xlab("") 
+SAE_val_reg
+  
+## TARGETING ----
 viz_cr_region <- rbind(viz_cr_region19,viz_cr_region20,viz_cr_region21)
 CR_relativepov <- viz_cr_region%>%
   ggplot() + 
   geom_sf(aes(geometry = geometry,fill=cov_rate,color=cov_rate)) + 
-  ggtitle("RdC/PdC Coverage Rate on Household Relative Poverty - Region level in 2019") + 
+  ggtitle("RdC/PdC Coverage Rate on Household Relative Poverty - Region level") + 
   coord_sf() + 
   scale_fill_continuous(type = "viridis")+
   scale_color_continuous(type = "viridis")+ 
   facet_grid(. ~ TIME)
 CR_relativepov
+
+regional_povrel <-targeting[,c(1,2,4,5)]%>%
+  mutate(Value=ifelse(is.na(Value),4.2,Value))%>%
+  left_join(harmonize_region_code)%>%
+  right_join(viz_cr_region, join_by(ITTER107,TIME))
+regional_povrel_map<-regional_povrel%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry,fill=Value,color=Value)) + 
+  ggtitle("Relative Poverty - Regional Incidences") + 
+  coord_sf() + 
+  scale_fill_viridis_c(option = "plasma")+
+  scale_color_viridis_c(option = "plasma")+ 
+  facet_grid(. ~ TIME)
+regional_povrel_map
 
 viz_cr_region21_pass <- households_regional_coverage_rate_povass%>%
   mutate(rgn = as.factor(rgn))%>%
