@@ -587,13 +587,13 @@ SAE_val<- result%>%
   pivot_wider(names_from = TIME, 
                      values_from = FH_EBLUP)%>%
   mutate(ITTER107 = as.factor(ITTER107))
-SAE_val <- rbind()#add national avg
 SAE_val_deg <-ggparcoord(SAE_val, columns = 4:6, groupColumn = 1, order = "anyClass",
              scale="globalminmax",
              showPoints = TRUE, 
              title = "Trend of Relative Poverty - by DEGURBA",
              alphaLines = 0.3
   ) + 
+  scale_color_manual(values=c("#37123C","#71677C","#DDA77B"))+
   xlab("")
 SAE_val_deg
 #add national average in a contrasting colour - set useful colours
