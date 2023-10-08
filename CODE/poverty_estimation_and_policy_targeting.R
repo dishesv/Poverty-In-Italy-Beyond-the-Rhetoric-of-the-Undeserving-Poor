@@ -300,7 +300,8 @@ targeting_pass<-targeting_pass%>%
   mutate(cov_rate = round(households/(pov*tot_weights),3)*100)
 
 households_regional_coverage_rate_povass <- targeting_pass%>%
-  dplyr::select(Territorio, TIME, cov_rate)
+  dplyr::select(Territorio, TIME, cov_rate,pov)%>%
+  mutate(pov=round(pov,3)*100)
 
 #Prepping the structure for visualisation
 households_regional_coverage_rate_povrel<- households_regional_coverage_rate_povrel%>%
@@ -645,3 +646,11 @@ CR_2021_pass <- viz_cr_region21_pass%>%
   scale_color_continuous(type = "viridis", option = "magma")
 CR_2021_pass
 
+pass_21 <- viz_cr_region21_pass%>%
+  ggplot() + 
+  geom_sf(aes(geometry = geometry,fill=pov,color=pov)) + 
+  ggtitle("Household Absolute Poverty - Region level in 2021") + 
+  coord_sf() + 
+  scale_fill_continuous(type = "viridis", option = "magma")+
+  scale_color_continuous(type = "viridis", option = "magma")
+pass_21
